@@ -18,6 +18,7 @@ import {
   unhideReview,
 } from "@/store/admin/review-slice";
 import { Eye, EyeOff, Loader2, Package } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 import { categoryOptionsMap } from "@/config";
 
 function ProductReviewsDialog({ open, onOpenChange, product }) {
@@ -143,7 +144,7 @@ function ProductReviewsDialog({ open, onOpenChange, product }) {
                       isOutOfStock ? "text-gray-600" : "text-primary"
                     }`}
                   >
-                    ₱{product?.price}
+                    ₱{formatCurrency(product?.price)}
                   </p>
                   <Badge
                     className={`${

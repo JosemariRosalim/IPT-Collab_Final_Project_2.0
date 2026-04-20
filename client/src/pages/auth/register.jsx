@@ -51,17 +51,6 @@ function AuthRegister() {
   function onSubmit(event) {
     event.preventDefault();
 
-    const EMAIL_REGEX = /^[\w.-]+@(student\.buksu\.edu\.ph|buksu\.edu\.ph)$/;
-
-    if (!EMAIL_REGEX.test(formData.email)) {
-      toast({
-        title: "Invalid Email Format",
-        description: "Please use an email ending with @student.buksu.edu.ph or @buksu.edu.ph",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const hasRequiredPasswordLength = formData.password.length >= 8;
     const hasSpecialCharacter = /[^A-Za-z0-9]/.test(formData.password);
 

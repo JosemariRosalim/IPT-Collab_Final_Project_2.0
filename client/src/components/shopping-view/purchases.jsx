@@ -3,7 +3,9 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useDispatch, useSelector } from "react-redux";
+import { formatCurrency } from "@/lib/utils";
 import { getAllOrdersByUserId, archiveOrder, unarchiveOrder } from "@/store/shop/order-slice";
+import { ArchiveConfirmationDialog } from "../common/archive-confirmation-dialog";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
@@ -101,7 +103,7 @@ function RatingDialog({ open, onOpenChange, product, orderId }) {
             />
             <div>
               <h3 className="font-semibold">{product?.title}</h3>
-              <p className="text-sm text-muted-foreground">₱{product?.price}</p>
+              <p className="text-sm text-muted-foreground">₱{formatCurrency(product?.price)}</p>
             </div>
           </div>
 
@@ -171,6 +173,10 @@ function ShoppingPurchases() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [orderToArchive, setOrderToArchive] = useState(null);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchivingMode, setIsArchivingMode] = useState(true);
 
   useEffect(() => {
     if (user?.id) {
@@ -229,12 +235,20 @@ function ShoppingPurchases() {
     }
   }
 
-  const handleArchivePurchase = async (orderId) => {
-    if (!orderId || !user?.id) return;
+  const handleArchivePurchase = async (order) => {
+    if (!order._id || !user?.id) return;
+    setOrderToArchive(order);
+    setIsArchivingMode(true);
+    setOpenArchiveDialog(true);
+  };
 
+  const handleArchiveConfirm = async () => {
+    if (!orderToArchive?._id || !user?.id) return;
+
+    setIsArchiving(true);
     try {
       const result = await dispatch(
-        archiveOrder({ id: orderId, userId: user.id })
+        archiveOrder({ id: orderToArchive._id, userId: user.id })
       );
 
       if (result.payload?.success) {
@@ -243,8 +257,9 @@ function ShoppingPurchases() {
           description: "The purchase has been moved to archived.",
           variant: "success",
         });
-        // Refresh purchase list
         dispatch(getAllOrdersByUserId({ userId: user.id, archived: showArchived ? "true" : "false" }));
+        setOpenArchiveDialog(false);
+        setOrderToArchive(null);
       } else {
         toast({
           title: "Failed to archive purchase",
@@ -258,28 +273,39 @@ function ShoppingPurchases() {
         description: "Failed to archive purchase. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsArchiving(false);
     }
   };
 
-  const handleUnarchivePurchase = async (orderId) => {
-    if (!orderId || !user?.id) return;
+  const handleUnarchivePurchase = async (order) => {
+    if (!order._id || !user?.id) return;
+    setOrderToArchive(order);
+    setIsArchivingMode(false);
+    setOpenArchiveDialog(true);
+  };
 
+  const handleUnarchiveConfirm = async () => {
+    if (!orderToArchive?._id || !user?.id) return;
+
+    setIsArchiving(true);
     try {
       const result = await dispatch(
-        unarchiveOrder({ id: orderId, userId: user.id })
+        unarchiveOrder({ id: orderToArchive._id, userId: user.id })
       );
 
       if (result.payload?.success) {
         toast({
-          title: "Purchase unarchived successfully",
-          description: "The purchase has been restored.",
+          title: "Purchase restored successfully",
+          description: "The purchase has been restored to your active purchases.",
           variant: "success",
         });
-        // Refresh purchase list
         dispatch(getAllOrdersByUserId({ userId: user.id, archived: showArchived ? "true" : "false" }));
+        setOpenArchiveDialog(false);
+        setOrderToArchive(null);
       } else {
         toast({
-          title: "Failed to unarchive purchase",
+          title: "Failed to restore purchase",
           description: result.payload?.message || "Please try again later.",
           variant: "destructive",
         });
@@ -287,9 +313,11 @@ function ShoppingPurchases() {
     } catch (error) {
       toast({
         title: "Error occurred",
-        description: "Failed to unarchive purchase. Please try again.",
+        description: "Failed to restore purchase. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsArchiving(false);
     }
   };
 
@@ -420,9 +448,9 @@ function ShoppingPurchases() {
                           <h3 className="font-semibold text-sm sm:text-base mb-2">{item.title}</h3>
                           <div className="flex flex-wrap items-center gap-4 text-sm">
                             <span className="text-muted-foreground"><span className="font-medium">Quantity:</span> {item.quantity}</span>
-                            <span className="text-muted-foreground"><span className="font-medium">Price:</span> ₱{item.price?.toFixed(2)}</span>
+                            <span className="text-muted-foreground"><span className="font-medium">Price:</span> ₱{formatCurrency(item.price)}</span>
                             <span className="font-semibold text-foreground">
-                              <span className="font-medium">Total:</span> ₱{(item.price * item.quantity).toFixed(2)}
+                              <span className="font-medium">Total:</span> ₱{formatCurrency(item.price * item.quantity)}
                             </span>
                           </div>
                         </div>
@@ -454,7 +482,7 @@ function ShoppingPurchases() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleArchivePurchase(order._id)}
+                          onClick={() => handleArchivePurchase(order)}
                           className="flex items-center gap-2"
                         >
                           <Archive className="w-4 h-4" />
@@ -465,7 +493,7 @@ function ShoppingPurchases() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleUnarchivePurchase(order._id)}
+                          onClick={() => handleUnarchivePurchase(order)}
                           className="flex items-center gap-2"
                         >
                           <ArchiveRestore className="w-4 h-4" />
@@ -487,6 +515,21 @@ function ShoppingPurchases() {
         onOpenChange={setRatingDialogOpen}
         product={selectedProduct}
         orderId={selectedOrderId}
+      />
+
+      {/* Archive/Unarchive Confirmation Dialog */}
+      <ArchiveConfirmationDialog
+        open={openArchiveDialog}
+        onOpenChange={setOpenArchiveDialog}
+        isLoading={isArchiving}
+        onConfirm={isArchivingMode ? handleArchiveConfirm : handleUnarchiveConfirm}
+        archiveType="order"
+        isArchiving={isArchivingMode}
+        itemDetails={{
+          itemId: orderToArchive?._id,
+          paymentStatus: orderToArchive?.paymentStatus,
+          totalAmount: orderToArchive?.totalAmount ? `₱${orderToArchive.totalAmount}` : undefined,
+        }}
       />
     </>
   );

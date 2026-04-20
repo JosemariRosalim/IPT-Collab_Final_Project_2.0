@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteCartItem, updateCartQuantity } from "@/store/shop/cart-slice";
 import { useToast } from "../ui/use-toast";
+import { formatCurrency } from "@/lib/utils";
 
 function UserCartItemsContent({ cartItem }) {
   const { user } = useSelector((state) => state.auth);
@@ -82,7 +83,10 @@ function UserCartItemsContent({ cartItem }) {
       />
       <div className="flex-1">
         <h3 className="font-extrabold">{cartItem?.title}</h3>
-        <div className="flex items-center gap-2 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
+          Stock Available: {cartItem?.totalStock}
+        </p>
+        <div className="flex items-center gap-2 mt-2">
           <Button
             variant="outline"
             className="h-8 w-8 rounded-full"
@@ -107,7 +111,7 @@ function UserCartItemsContent({ cartItem }) {
       </div>
       <div className="flex flex-col items-end">
         <p className="font-semibold">
-          ₱{(cartItem?.price * cartItem?.quantity).toFixed(2)}
+          ₱{formatCurrency(cartItem?.price * cartItem?.quantity)}
         </p>
         <button
           type="button"

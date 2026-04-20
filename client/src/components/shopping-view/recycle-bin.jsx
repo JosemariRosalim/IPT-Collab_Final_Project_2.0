@@ -23,6 +23,7 @@ import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "../ui/use-toast";
 import { ArrowLeft, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatOrderId } from "@/lib/utils";
 
 const formatDateTime = (dateInput) => {
   if (!dateInput) return "N/A";
@@ -238,7 +239,7 @@ useEffect(() => {
                   {cancelledOrders.map((order) => (
                     <TableRow key={order._id}>
                       <TableCell className="font-medium break-all">
-                        {order._id}
+                        {formatOrderId(order._id, order.sequentialOrderNumber)}
                       </TableCell>
                       <TableCell>
                         {formatDateTime(order.orderUpdateDate || order.orderDate)}

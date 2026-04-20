@@ -11,10 +11,10 @@ const googleAuthSuccess = (req, res) => {
       return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=authentication_failed`);
     }
 
-    const EMAIL_REGEX = /^[\w.-]+@(student\.buksu\.edu\.ph|buksu\.edu\.ph)$/;
+    const EMAIL_REGEX = /^[\w.-]+@[\w.-]*buksu\.edu\.ph$/i;
 
     if (!EMAIL_REGEX.test(user.email)) {
-      const errorMessage = encodeURIComponent("Please use an email ending with @student.buksu.edu.ph or @buksu.edu.ph");
+      const errorMessage = encodeURIComponent("Please use a valid BUKSU email address");
       return res.redirect(`${process.env.CLIENT_URL}/auth/login?error=${errorMessage}`);
     }
 

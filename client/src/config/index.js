@@ -12,7 +12,7 @@ export const registerFormControls = [
     label: "Email",
     placeholder: "Enter your email",
     componentType: "input",
-    type: "email",
+    type: "text",
     required: true,
   },
   {
@@ -33,7 +33,7 @@ export const loginFormControls = [
     label: "Email",
     placeholder: "Enter your email",
     componentType: "input",
-    type: "email",
+    type: "text",
   },
   {
     name: "password",
@@ -181,8 +181,9 @@ export const addressFormControls = [
     label: "Phone",
     name: "phone",
     componentType: "input",
-    type: "text",
+    type: "tel",
     placeholder: "Enter your phone number",
+    pattern: "[0-9]*",
   },
   {
     label: "Notes",

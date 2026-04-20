@@ -1,6 +1,7 @@
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import AdminProductTile from "@/components/admin-view/product-tile";
 import ProductReviewsDialog from "@/components/admin-view/product-reviews-dialog";
+import { ArchiveConfirmationDialog } from "@/components/common/archive-confirmation-dialog";
 import CommonForm from "@/components/common/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { formatCurrency } from "@/lib/utils";
 import { categoryOptionsMap } from "@/config";
 import { addProductFormElements } from "@/config";
 import {
@@ -54,6 +56,10 @@ function AdminProducts() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [productToArchive, setProductToArchive] = useState(null);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchivingMode, setIsArchivingMode] = useState(true);
 
   const { productList } = useSelector((state) => state.adminProducts);
   const { user } = useSelector((state) => state.auth);
@@ -125,7 +131,7 @@ function AdminProducts() {
     setShowReviewDialog(false);
   }
 
-  function handleArchive(getCurrentProductId) {
+  function handleArchive(getCurrentProductId, product) {
     if (!user?._id && !user?.id) {
       toast({
         title: "Authentication required",
@@ -135,31 +141,41 @@ function AdminProducts() {
       return;
     }
 
-    // Confirm before archiving
-    if (!window.confirm("Are you sure you want to archive this product? Archived products will not be visible to customers.")) {
-      return;
-    }
-
-    const adminId = user?._id || user?.id;
-    dispatch(archiveProduct({ id: getCurrentProductId, adminId })).then((data) => {
-      if (data?.payload?.success) {
-        toast({
-          title: "Product archived successfully",
-          description: data?.payload?.message || "The product has been archived.",
-          variant: "success",
-        });
-        dispatch(fetchAllProducts());
-      } else {
-        toast({
-          title: "Failed to archive product",
-          description: data?.payload?.message || "Please try again later.",
-          variant: "destructive",
-        });
-      }
-    });
+    setProductToArchive({ id: getCurrentProductId, ...product });
+    setIsArchivingMode(true);
+    setOpenArchiveDialog(true);
   }
 
-  function handleUnarchive(getCurrentProductId) {
+  function handleArchiveConfirm() {
+    if (!productToArchive?.id) return;
+
+    setIsArchiving(true);
+    const adminId = user?._id || user?.id;
+    dispatch(archiveProduct({ id: productToArchive.id, adminId }))
+      .then((data) => {
+        if (data?.payload?.success) {
+          toast({
+            title: "Product archived successfully",
+            description: data?.payload?.message || "The product has been archived.",
+            variant: "success",
+          });
+          dispatch(fetchAllProducts());
+          setOpenArchiveDialog(false);
+          setProductToArchive(null);
+        } else {
+          toast({
+            title: "Failed to archive product",
+            description: data?.payload?.message || "Please try again later.",
+            variant: "destructive",
+          });
+        }
+      })
+      .finally(() => {
+        setIsArchiving(false);
+      });
+  }
+
+  function handleUnarchive(getCurrentProductId, product) {
     if (!user?._id && !user?.id) {
       toast({
         title: "Authentication required",
@@ -169,28 +185,38 @@ function AdminProducts() {
       return;
     }
 
-    // Confirm before unarchiving
-    if (!window.confirm("Are you sure you want to unarchive this product? The product will become visible to customers again.")) {
-      return;
-    }
+    setProductToArchive({ id: getCurrentProductId, ...product });
+    setIsArchivingMode(false);
+    setOpenArchiveDialog(true);
+  }
 
+  function handleUnarchiveConfirm() {
+    if (!productToArchive?.id) return;
+
+    setIsArchiving(true);
     const adminId = user?._id || user?.id;
-    dispatch(unarchiveProduct({ id: getCurrentProductId, adminId })).then((data) => {
-      if (data?.payload?.success) {
-        toast({
-          title: "Product unarchived successfully",
-          description: data?.payload?.message || "The product has been unarchived.",
-          variant: "success",
-        });
-        dispatch(fetchAllProducts());
-      } else {
-        toast({
-          title: "Failed to unarchive product",
-          description: data?.payload?.message || "Please try again later.",
-          variant: "destructive",
-        });
-      }
-    });
+    dispatch(unarchiveProduct({ id: productToArchive.id, adminId }))
+      .then((data) => {
+        if (data?.payload?.success) {
+          toast({
+            title: "Product unarchived successfully",
+            description: data?.payload?.message || "The product has been unarchived.",
+            variant: "success",
+          });
+          dispatch(fetchAllProducts());
+          setOpenArchiveDialog(false);
+          setProductToArchive(null);
+        } else {
+          toast({
+            title: "Failed to unarchive product",
+            description: data?.payload?.message || "Please try again later.",
+            variant: "destructive",
+          });
+        }
+      })
+      .finally(() => {
+        setIsArchiving(false);
+      });
   }
 
   // Handle acquiring lock when starting to edit (2PL - Phase 1: Growing Phase)
@@ -419,7 +445,7 @@ function AdminProducts() {
               <div className="space-y-1 p-3 bg-primary/10 rounded-lg border border-primary/30">
                 <p className="text-xs text-muted-foreground">Price</p>
                 <p className="font-bold text-2xl text-primary">
-                  ₱{formData.price || "0"}
+                  ₱{formatCurrency(formData.price || 0)}
                 </p>
               </div>
             </div>
@@ -457,6 +483,22 @@ function AdminProducts() {
         open={showProductReviewsDialog}
         onOpenChange={setShowProductReviewsDialog}
         product={selectedProduct}
+      />
+
+      {/* Archive/Unarchive Confirmation Dialog */}
+      <ArchiveConfirmationDialog
+        open={openArchiveDialog}
+        onOpenChange={setOpenArchiveDialog}
+        isLoading={isArchiving}
+        onConfirm={isArchivingMode ? handleArchiveConfirm : handleUnarchiveConfirm}
+        archiveType="product"
+        isArchiving={isArchivingMode}
+        itemDetails={{
+          itemId: productToArchive?._id,
+          itemTitle: productToArchive?.title,
+          price: productToArchive?.price ? `₱${productToArchive.price}` : undefined,
+          status: productToArchive?.totalStock === 0 ? "Out of Stock" : "In Stock",
+        }}
       />
     </Fragment>
   );

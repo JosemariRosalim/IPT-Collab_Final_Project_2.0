@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
   {
+    sequentialOrderNumber: {
+      type: Number,
+      unique: true,
+      sparse: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

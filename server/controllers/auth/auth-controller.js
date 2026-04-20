@@ -8,12 +8,12 @@ const { isPasswordStrong } = require("../../helpers/password-validator");
 const registerUser = async (req, res) => {
   const { userName, email, password, recaptchaToken } = req.body;
 
-    const EMAIL_REGEX = /^[\w.-]+@(student\.buksu\.edu\.ph|buksu\.edu\.ph)$/;
+    const EMAIL_REGEX = /^[\w.-]+@[\w.-]*buksu\.edu\.ph$/i;
 
     if (!EMAIL_REGEX.test(email)) {
       return res.status(400).json({
         success: false,
-        message: "Please use an email ending with @student.buksu.edu.ph or @buksu.edu.ph",
+        message: "Please use a valid BUKSU email address",
       });
     }
 
@@ -94,12 +94,12 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { email, password, recaptchaToken } = req.body;
 
-    const EMAIL_REGEX = /^[\w.-]+@(student\.buksu\.edu\.ph|buksu\.edu\.ph)$/;
+    const EMAIL_REGEX = /^[\w.-]+@[\w.-]*buksu\.edu\.ph$/i;
 
     if (!EMAIL_REGEX.test(email)) {
       return res.status(400).json({
         success: false,
-        message: "Please use an email ending with @student.buksu.edu.ph or @buksu.edu.ph",
+        message: "Please use a valid BUKSU email address",
       });
     }
 

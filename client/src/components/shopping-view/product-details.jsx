@@ -11,6 +11,7 @@ import StarRatingComponent from "../common/star-rating";
 import { useEffect } from "react";
 import { getReviews } from "@/store/shop/review-slice";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/utils";
 
 function ProductDetailsDialog({ open, setOpen, productDetails }) {
   const dispatch = useDispatch();
@@ -102,7 +103,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
           </div>
           <div className="flex items-center justify-between">
             <p className={`text-2xl sm:text-3xl font-bold ${isOutOfStock ? 'text-gray-600' : 'text-primary'}`}>
-              ₱{productDetails?.price?.toFixed(2)}
+              ₱{formatCurrency(productDetails?.price)}
             </p>
             <div className={`text-sm font-semibold px-3 py-1 rounded ${
               productDetails?.totalStock === 0 

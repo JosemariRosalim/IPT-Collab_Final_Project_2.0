@@ -1,6 +1,7 @@
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { formatCurrency } from "@/lib/utils";
 import { Package, Lock, Edit3 } from "lucide-react";
 
 function AdminProductTile({
@@ -72,7 +73,7 @@ function AdminProductTile({
           </h2>
           <div className="flex justify-between items-center mb-2">
             <span className={`text-lg font-semibold ${shouldGrayOut ? 'text-gray-600' : 'text-primary'}`}>
-              ₱{product?.price}
+              ₱{formatCurrency(product?.price)}
             </span>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Package className="h-3 w-3" />
@@ -111,7 +112,7 @@ function AdminProductTile({
             </Button>
             {!isArchived ? (
               <Button 
-                onClick={() => handleArchive(product?._id)}
+                onClick={() => handleArchive(product?._id, product)}
                 disabled={isLocked}
                 variant={isLocked ? "secondary" : "destructive"}
                 className="flex-1 h-9 text-sm"
@@ -128,7 +129,7 @@ function AdminProductTile({
               </Button>
             ) : (
               <Button 
-                onClick={() => handleUnarchive(product?._id)}
+                onClick={() => handleUnarchive(product?._id, product)}
                 disabled={isLocked}
                 variant={isLocked ? "secondary" : "default"}
                 className={`flex-1 h-9 text-sm ${!isLocked ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}

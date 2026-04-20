@@ -66,17 +66,6 @@ function AuthLogin() {
       return;
     }
 
-    const EMAIL_REGEX = /^[\w.-]+@(student\.buksu\.edu\.ph|buksu\.edu\.ph)$/;
-
-    if (!EMAIL_REGEX.test(formData.email)) {
-      toast({
-        title: "Invalid Email Format",
-        description: "Please use an email ending with @student.buksu.edu.ph or @buksu.edu.ph",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setArchivedNotice("");
 
     // Include reCAPTCHA token in login data

@@ -10,7 +10,6 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
     email: customerInfo?.email || "",
     phone: customerInfo?.phone || "",
     gender: customerInfo?.gender || "",
-    dateOfBirth: customerInfo?.dateOfBirth || "",
   });
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const { user } = useSelector((state) => state.auth);
@@ -44,6 +43,7 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
     type: "tel",
     placeholder: "Enter your phone number",
     required: true,
+    pattern: "[0-9]*",
   },
   {
     label: "Gender",
@@ -56,13 +56,6 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
       { id: "prefer-not-to-say", label: "Prefer not to say" },
     ],
   },
-  {
-    label: "Date of Birth",
-    name: "dateOfBirth",
-    componentType: "input",
-    type: "date",
-    placeholder: "Select your date of birth",
-  },
   ], []);
 
   // Pre-fill with user info if available
@@ -71,13 +64,11 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
       // Get saved data from localStorage if exists
       const savedPhone = localStorage.getItem(`customer_phone_${user.id}`) || "";
       const savedGender = localStorage.getItem(`customer_gender_${user.id}`) || "";
-      const savedDateOfBirth = localStorage.getItem(`customer_dateOfBirth_${user.id}`) || "";
       const initialData = {
         name: user.userName || "",
         email: user.email || "",
         phone: savedPhone,
         gender: savedGender,
-        dateOfBirth: savedDateOfBirth,
       };
       setFormData(initialData);
       setCustomerInfo(initialData);
@@ -101,15 +92,13 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
       customerInfo.name !== formData.name || 
       customerInfo.email !== formData.email || 
       customerInfo.phone !== formData.phone ||
-      customerInfo.gender !== formData.gender ||
-      customerInfo.dateOfBirth !== formData.dateOfBirth
+      customerInfo.gender !== formData.gender
     )) {
       setFormData({
         name: customerInfo.name || "",
         email: customerInfo.email || "",
         phone: customerInfo.phone || "",
         gender: customerInfo.gender || "",
-        dateOfBirth: customerInfo.dateOfBirth || "",
       });
     }
   }, [customerInfo]);
@@ -134,9 +123,6 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
           }
           if (formData.gender) {
             localStorage.setItem(`customer_gender_${user.id}`, formData.gender);
-          }
-          if (formData.dateOfBirth) {
-            localStorage.setItem(`customer_dateOfBirth_${user.id}`, formData.dateOfBirth);
           }
         }
         // Notify parent of form data change for real-time updates
@@ -240,11 +226,6 @@ function CustomerInfo({ customerInfo, setCustomerInfo, onFormDataChange }) {
             {formData.gender && (
               <p className="text-sm">
                 <strong>Gender:</strong> {formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1).replace(/-/g, " ")}
-              </p>
-            )}
-            {formData.dateOfBirth && (
-              <p className="text-sm">
-                <strong>Date of Birth:</strong> {new Date(formData.dateOfBirth).toLocaleDateString()}
               </p>
             )}
           </div>

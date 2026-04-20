@@ -1,11 +1,13 @@
 import { useSelector, useDispatch } from "react-redux";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogClose } from "../ui/dialog";
+import { ArchiveConfirmationDialog } from "../common/archive-confirmation-dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import { Receipt, X, Archive, ArchiveRestore, RotateCcw, Trash2, Clock, AlertTriangle } from "lucide-react";
+import { formatCurrency, formatOrderId } from "@/lib/utils";
 import {
   cancelOrder,
   getOrderDetails,
@@ -28,6 +30,9 @@ function ShoppingOrderDetailsView({ orderDetails }) {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchivingMode, setIsArchivingMode] = useState(true);
   
   const handleViewPayment = () => {
     navigate(`/shop/payment-success?orderId=${orderDetails?._id}`);
@@ -121,7 +126,14 @@ function ShoppingOrderDetailsView({ orderDetails }) {
 
   const handleArchive = async () => {
     if (!orderDetails?._id || !user?.id) return;
+    setIsArchivingMode(true);
+    setOpenArchiveDialog(true);
+  };
 
+  const handleArchiveConfirm = async () => {
+    if (!orderDetails?._id || !user?.id) return;
+
+    setIsArchiving(true);
     try {
       const result = await dispatch(
         archiveOrder({ id: orderDetails._id, userId: user.id })
@@ -133,9 +145,9 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           description: "The order has been moved to archived.",
           variant: "success",
         });
-        // Refresh order details and order list
         dispatch(getOrderDetails(orderDetails._id));
         dispatch(getAllOrdersByUserId({ userId: user.id }));
+        setOpenArchiveDialog(false);
       } else {
         toast({
           title: "Failed to archive order",
@@ -149,12 +161,21 @@ function ShoppingOrderDetailsView({ orderDetails }) {
         description: "Failed to archive order. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsArchiving(false);
     }
   };
 
   const handleUnarchive = async () => {
     if (!orderDetails?._id || !user?.id) return;
+    setIsArchivingMode(false);
+    setOpenArchiveDialog(true);
+  };
 
+  const handleUnarchiveConfirm = async () => {
+    if (!orderDetails?._id || !user?.id) return;
+
+    setIsArchiving(true);
     try {
       const result = await dispatch(
         unarchiveOrder({ id: orderDetails._id, userId: user.id })
@@ -166,9 +187,9 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           description: "The order has been restored.",
           variant: "success",
         });
-        // Refresh order details and order list
         dispatch(getOrderDetails(orderDetails._id));
         dispatch(getAllOrdersByUserId({ userId: user.id }));
+        setOpenArchiveDialog(false);
       } else {
         toast({
           title: "Failed to unarchive order",
@@ -182,6 +203,8 @@ function ShoppingOrderDetailsView({ orderDetails }) {
         description: "Failed to unarchive order. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsArchiving(false);
     }
   };
 
@@ -267,7 +290,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
         <div className="grid gap-2">
           <div className="flex items-start sm:items-center justify-between flex-wrap gap-2">
             <p className="font-medium">Order ID</p>
-            <Label className="text-right break-all">{orderDetails?._id}</Label>
+            <Label className="text-right break-all">{formatOrderId(orderDetails?._id, orderDetails?.sequentialOrderNumber)}</Label>
           </div>
           <div className="flex mt-2 items-center justify-between gap-2">
             <p className="font-medium">Order Date</p>
@@ -288,7 +311,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           )}
           <div className="flex mt-2 items-center justify-between gap-2">
             <p className="font-medium">Order Price</p>
-            <Label>₱{orderDetails?.totalAmount}</Label>
+            <Label>₱{formatCurrency(orderDetails?.totalAmount)}</Label>
           </div>
           <div className="flex mt-2 items-center justify-between gap-2">
             <p className="font-medium">Payment method</p>
@@ -432,10 +455,10 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                         <h3 className="font-semibold text-foreground truncate">{item.title}</h3>
                         <div className="flex items-center gap-4 mt-2 text-sm">
                           <span className="text-muted-foreground">Qty: <span className="font-medium text-foreground">{item.quantity}</span></span>
-                          <span className="text-muted-foreground">Price: <span className="font-semibold text-primary">₱{item.price?.toFixed(2)}</span></span>
+                          <span className="text-muted-foreground">Price: <span className="font-semibold text-primary">₱{formatCurrency(item.price)}</span></span>
                         </div>
                         <div className="mt-1 text-sm font-semibold text-foreground">
-                          Subtotal: <span className="text-primary">₱{(item.price * item.quantity).toFixed(2)}</span>
+                          Subtotal: <span className="text-primary">₱{formatCurrency(item.price * item.quantity)}</span>
                         </div>
                       </div>
                     </li>
@@ -577,7 +600,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                   <strong>Order ID:</strong> {orderDetails?._id}
                 </p>
                 <p className="text-sm">
-                  <strong>Total Amount:</strong> ₱{orderDetails?.totalAmount}
+                  <strong>Total Amount:</strong> ₱{formatCurrency(orderDetails?.totalAmount)}
                 </p>
               </div>
             </div>
@@ -600,6 +623,21 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Archive/Unarchive Confirmation Dialog */}
+      <ArchiveConfirmationDialog
+        open={openArchiveDialog}
+        onOpenChange={setOpenArchiveDialog}
+        isLoading={isArchiving}
+        onConfirm={isArchivingMode ? handleArchiveConfirm : handleUnarchiveConfirm}
+        archiveType="order"
+        isArchiving={isArchivingMode}
+        itemDetails={{
+          itemId: orderDetails?._id,
+          paymentStatus: orderDetails?.paymentStatus,
+          totalAmount: orderDetails?.totalAmount ? `₱${formatCurrency(orderDetails.totalAmount)}` : undefined,
+        }}
+      />
     </DialogContent>
   );
 }

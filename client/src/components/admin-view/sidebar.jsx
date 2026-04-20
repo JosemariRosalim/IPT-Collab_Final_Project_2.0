@@ -2,7 +2,6 @@ import {
   BadgeCheck,
   ChartNoAxesCombined,
   ShoppingBasket,
-  User,
 } from "lucide-react";
 import { Fragment } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,12 +19,6 @@ const adminSidebarMenuItems = [
     label: "Orders",
     path: "/admin/orders",
     icon: <BadgeCheck />,
-  },
-  {
-    id: "profile",
-    label: "My Profile",
-    path: "/admin/profile",
-    icon: <User />,
   },
 ];
 

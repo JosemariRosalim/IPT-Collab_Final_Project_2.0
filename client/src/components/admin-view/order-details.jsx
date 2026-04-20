@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import CommonForm from "../common/form";
 import { DialogContent } from "../ui/dialog";
+import { ArchiveConfirmationDialog } from "../common/archive-confirmation-dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
+import { formatCurrency, formatOrderId } from "@/lib/utils";
 import {
   getAllOrdersForAdmin,
   getOrderDetailsForAdmin,
@@ -30,6 +32,9 @@ const ORDER_STATUS_FLOW = [
 function AdminOrderDetailsView({ orderDetails }) {
   const [formData, setFormData] = useState(initialFormData);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchivingMode, setIsArchivingMode] = useState(true);
   const dispatch = useDispatch();
   const { toast } = useToast();
 
@@ -96,39 +101,61 @@ function AdminOrderDetailsView({ orderDetails }) {
   }
 
   function handleArchive() {
-    dispatch(archiveOrder(orderDetails?._id)).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(getOrderDetailsForAdmin(orderDetails?._id));
-        dispatch(getAllOrdersForAdmin(false));
-        toast({
-          title: data?.payload?.message,
-          variant: "success",
-        });
-      } else {
-        toast({
-          title: data?.payload?.message || "Failed to archive order",
-          variant: "destructive",
-        });
-      }
-    });
+    setIsArchivingMode(true);
+    setOpenArchiveDialog(true);
+  }
+
+  function handleArchiveConfirm() {
+    setIsArchiving(true);
+    dispatch(archiveOrder(orderDetails?._id))
+      .then((data) => {
+        if (data?.payload?.success) {
+          dispatch(getOrderDetailsForAdmin(orderDetails?._id));
+          dispatch(getAllOrdersForAdmin(false));
+          toast({
+            title: data?.payload?.message,
+            variant: "success",
+          });
+          setOpenArchiveDialog(false);
+        } else {
+          toast({
+            title: data?.payload?.message || "Failed to archive order",
+            variant: "destructive",
+          });
+        }
+      })
+      .finally(() => {
+        setIsArchiving(false);
+      });
   }
 
   function handleUnarchive() {
-    dispatch(unarchiveOrder(orderDetails?._id)).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(getOrderDetailsForAdmin(orderDetails?._id));
-        dispatch(getAllOrdersForAdmin(false));
-        toast({
-          title: data?.payload?.message,
-          variant: "success",
-        });
-      } else {
-        toast({
-          title: data?.payload?.message || "Failed to unarchive order",
-          variant: "destructive",
-        });
-      }
-    });
+    setIsArchivingMode(false);
+    setOpenArchiveDialog(true);
+  }
+
+  function handleUnarchiveConfirm() {
+    setIsArchiving(true);
+    dispatch(unarchiveOrder(orderDetails?._id))
+      .then((data) => {
+        if (data?.payload?.success) {
+          dispatch(getOrderDetailsForAdmin(orderDetails?._id));
+          dispatch(getAllOrdersForAdmin(false));
+          toast({
+            title: data?.payload?.message,
+            variant: "success",
+          });
+          setOpenArchiveDialog(false);
+        } else {
+          toast({
+            title: data?.payload?.message || "Failed to unarchive order",
+            variant: "destructive",
+          });
+        }
+      })
+      .finally(() => {
+        setIsArchiving(false);
+      });
   }
 
   const canArchive = orderDetails?.orderStatus === "pickedUp" && !orderDetails?.isArchived;
@@ -174,38 +201,38 @@ function AdminOrderDetailsView({ orderDetails }) {
     <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
       <div className="grid gap-4 sm:gap-6 pb-4">
         <div className="grid gap-2">
-          <div className="flex mt-6 items-start sm:items-center justify-between flex-wrap gap-2">
+            <div className="flex mt-10 items-start sm:items-center justify-between flex-wrap gap-4">
             <p className="font-medium">Order ID</p>
-            <Label className="text-right break-all">{orderDetails?._id}</Label>
+            <Label className="text-right break-all flex-1 text-left sm:text-right">{formatOrderId(orderDetails?._id, orderDetails?.sequentialOrderNumber)}</Label>
           </div>
-          <div className="flex mt-2 items-center justify-between gap-2">
+          <div className="flex mt-2 items-center justify-between gap-4">
             <p className="font-medium">Order Date</p>
-            <Label>{orderDetails?.orderDate.split("T")[0]}</Label>
+            <Label className="flex-1 text-left sm:text-right">{orderDetails?.orderDate.split("T")[0]}</Label>
           </div>
           {deadlineInfo && orderDetails?.paymentStatus === "pending" && (
-            <div className="flex mt-2 items-center justify-between gap-2 flex-wrap">
+            <div className="flex mt-2 items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <p className="font-medium flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   Payment Deadline
                 </p>
               </div>
-              <Label className={deadlineInfo.isExpired ? "text-red-600 font-semibold" : deadlineInfo.isUrgent ? "text-orange-600 font-semibold" : deadlineInfo.isWarning ? "text-yellow-600 font-semibold" : ""}>
+              <Label className={deadlineInfo.isExpired ? "text-red-600 font-semibold" : deadlineInfo.isUrgent ? "text-orange-600 font-semibold" : deadlineInfo.isWarning ? "text-yellow-600 font-semibold" : "flex-1 text-left sm:text-right"}>
                 {deadlineInfo.deadline.toLocaleDateString()} {deadlineInfo.deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Label>
             </div>
           )}
-          <div className="flex mt-2 items-center justify-between gap-2">
+          <div className="flex mt-2 items-center justify-between gap-4">
             <p className="font-medium">Order Price</p>
-            <Label>₱{orderDetails?.totalAmount}</Label>
+            <Label className="flex-1 text-left sm:text-right">₱{formatCurrency(orderDetails?.totalAmount)}</Label>
           </div>
-          <div className="flex mt-2 items-center justify-between gap-2">
+          <div className="flex mt-2 items-center justify-between gap-4">
             <p className="font-medium">Payment method</p>
-            <Label className="capitalize">{orderDetails?.paymentMethod}</Label>
+            <Label className="capitalize flex-1 text-left sm:text-right">{orderDetails?.paymentMethod}</Label>
           </div>
-          <div className="flex mt-2 items-center justify-between gap-2">
+          <div className="flex mt-2 items-center justify-between gap-4">
             <p className="font-medium">Payment Status</p>
-            <Label className="capitalize">
+            <Label className="capitalize flex-1 text-left sm:text-right">
               <Badge
                 className={`py-1 px-3 ${
                   orderDetails?.paymentStatus === "paid"
@@ -219,9 +246,9 @@ function AdminOrderDetailsView({ orderDetails }) {
               </Badge>
             </Label>
           </div>
-          <div className="flex mt-2 items-center justify-between gap-2">
+          <div className="flex mt-2 items-center justify-between gap-4">
             <p className="font-medium">Order Status</p>
-            <Label>
+            <Label className="flex-1 text-left sm:text-right">
               <Badge
                 className={`py-1 px-3 ${
                   orderDetails?.orderStatus === "pending"
@@ -248,9 +275,9 @@ function AdminOrderDetailsView({ orderDetails }) {
             </Label>
           </div>
           {orderDetails?.cancellationReason && (
-            <div className="flex mt-2 items-center justify-between gap-2">
+            <div className="flex mt-2 items-center justify-between gap-4">
               <p className="font-medium text-red-600">Cancellation Reason</p>
-              <Label className="text-red-600 font-semibold">
+              <Label className="text-red-600 font-semibold flex-1 text-left sm:text-right">
                 {orderDetails.cancellationReason}
               </Label>
             </div>
@@ -344,7 +371,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                       <span className="font-medium">{item.title}</span>
                       <div className="flex gap-4 text-sm">
                         <span>Qty: {item.quantity}</span>
-                        <span className="font-semibold">₱{item.price}</span>
+                        <span className="font-semibold">₱{formatCurrency(item.price)}</span>
                       </div>
                     </li>
                   ))
@@ -442,6 +469,22 @@ function AdminOrderDetailsView({ orderDetails }) {
           </div>
         </div>
       </div>
+      
+      {/* Archive/Unarchive Confirmation Dialog */}
+      <ArchiveConfirmationDialog
+        open={openArchiveDialog}
+        onOpenChange={setOpenArchiveDialog}
+        isLoading={isArchiving}
+        onConfirm={isArchivingMode ? handleArchiveConfirm : handleUnarchiveConfirm}
+        archiveType="order"
+        isArchiving={isArchivingMode}
+        itemDetails={{
+          itemId: orderDetails?._id,
+          orderStatus: orderDetails?.orderStatus === "pickedUp" ? "Picked Up" : orderDetails?.orderStatus,
+          paymentStatus: orderDetails?.paymentStatus,
+          totalAmount: orderDetails?.totalAmount ? `₱${formatCurrency(orderDetails.totalAmount)}` : undefined,
+        }}
+      />
     </DialogContent>
   );
 }

@@ -22,6 +22,7 @@ import { Badge } from "../ui/badge";
 import { ArrowLeft, Trash2, Clock, AlertTriangle, Archive, Sparkles } from "lucide-react";
 import { io } from "socket.io-client";
 import { useToast } from "../ui/use-toast";
+import { formatOrderId, formatCurrency } from "@/lib/utils";
 
 function AdminOrdersView() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -110,7 +111,7 @@ function AdminOrdersView() {
         
         toast({
           title: "New Order Received!",
-          description: `Order from ${orderData.userName || "Unknown User"} - ₱${orderData.totalAmount?.toFixed(2) || "0.00"}`,
+          description: `Order from ${orderData.userName || "Unknown User"} - ₱${formatCurrency(orderData.totalAmount) || "0.00"}`,
           duration: 3000,
           variant: "success",
         });
@@ -298,7 +299,7 @@ function AdminOrdersView() {
                   <TableRow key={orderItem?._id} className={isNew ? "bg-blue-50/50 dark:bg-blue-950/20 border-l-4 border-l-blue-500" : ""}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {orderItem?._id}
+                        {formatOrderId(orderItem?._id, orderItem?.sequentialOrderNumber)}
                         {isNew && (
                           <Badge className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1">
                             <Sparkles className="h-3 w-3" />
@@ -390,7 +391,7 @@ function AdminOrdersView() {
                           <span className="text-sm text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                    <TableCell>₱{orderItem?.totalAmount?.toFixed(2)}</TableCell>
+                    <TableCell>₱{formatCurrency(orderItem?.totalAmount)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {orderItem?.isArchived ? (
@@ -482,7 +483,7 @@ function AdminOrdersView() {
                   <strong>Payment Status:</strong> {orderToArchive?.paymentStatus}
                 </p>
                 <p className="text-sm">
-                  <strong>Total Amount:</strong> ₱{orderToArchive?.totalAmount}
+                  <strong>Total Amount:</strong> ₱{formatCurrency(orderToArchive?.totalAmount)}
                 </p>
               </div>
               <div className="mt-2 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">

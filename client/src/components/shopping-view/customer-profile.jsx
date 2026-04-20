@@ -28,6 +28,7 @@ const customerProfileFormControls = [
     componentType: "input",
     type: "tel",
     placeholder: "Enter your phone number",
+    pattern: "[0-9]*",
   },
   {
     label: "Gender",

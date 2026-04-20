@@ -7,6 +7,7 @@ import {
   archiveAdmin,
   unarchiveAdmin,
 } from "@/store/superadmin/admin-slice";
+import { ArchiveConfirmationDialog } from "@/components/common/archive-confirmation-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,6 +46,10 @@ function AdminManagement() {
     email: "",
     password: "",
   });
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [adminToArchive, setAdminToArchive] = useState(null);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchivingMode, setIsArchivingMode] = useState(true);
 
   useEffect(() => {
     dispatch(getAllAdmins());
@@ -109,9 +114,18 @@ function AdminManagement() {
     });
   };
 
-  const handleArchive = (id) => {
-    if (confirm("Are you sure you want to archive this admin?")) {
-      dispatch(archiveAdmin(id)).then((data) => {
+  const handleArchive = (admin) => {
+    setAdminToArchive(admin);
+    setIsArchivingMode(true);
+    setOpenArchiveDialog(true);
+  };
+
+  const handleArchiveConfirm = () => {
+    if (!adminToArchive?._id) return;
+
+    setIsArchiving(true);
+    dispatch(archiveAdmin(adminToArchive._id))
+      .then((data) => {
         if (data?.payload?.success) {
           toast({
             title: "Admin archived",
@@ -119,6 +133,8 @@ function AdminManagement() {
             variant: "success",
           });
           dispatch(getAllAdmins());
+          setOpenArchiveDialog(false);
+          setAdminToArchive(null);
         } else {
           toast({
             title: "Error",
@@ -126,27 +142,44 @@ function AdminManagement() {
             variant: "destructive",
           });
         }
+      })
+      .finally(() => {
+        setIsArchiving(false);
       });
-    }
   };
 
-  const handleUnarchive = (id) => {
-    dispatch(unarchiveAdmin(id)).then((data) => {
-      if (data?.payload?.success) {
-        toast({
-          title: "Admin restored",
-          description: data.payload.message,
-          variant: "success",
-        });
-        dispatch(getAllAdmins());
-      } else {
-        toast({
-          title: "Error",
-          description: data?.payload?.message || "Unarchive failed",
-          variant: "destructive",
-        });
-      }
-    });
+  const handleUnarchive = (admin) => {
+    setAdminToArchive(admin);
+    setIsArchivingMode(false);
+    setOpenArchiveDialog(true);
+  };
+
+  const handleUnarchiveConfirm = () => {
+    if (!adminToArchive?._id) return;
+
+    setIsArchiving(true);
+    dispatch(unarchiveAdmin(adminToArchive._id))
+      .then((data) => {
+        if (data?.payload?.success) {
+          toast({
+            title: "Admin restored",
+            description: data.payload.message,
+            variant: "success",
+          });
+          dispatch(getAllAdmins());
+          setOpenArchiveDialog(false);
+          setAdminToArchive(null);
+        } else {
+          toast({
+            title: "Error",
+            description: data?.payload?.message || "Unarchive failed",
+            variant: "destructive",
+          });
+        }
+      })
+      .finally(() => {
+        setIsArchiving(false);
+      });
   };
 
   const formatDate = (dateString) => {
@@ -228,7 +261,7 @@ function AdminManagement() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleArchive(admin._id)}
+                          onClick={() => handleArchive(admin)}
                           className="border-amber-200 text-amber-600 hover:bg-amber-50"
                           title="Archive admin"
                         >
@@ -292,7 +325,7 @@ function AdminManagement() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleUnarchive(admin._id)}
+                        onClick={() => handleUnarchive(admin)}
                         className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                         title="Unarchive admin"
                       >
@@ -371,6 +404,20 @@ function AdminManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Archive/Unarchive Confirmation Dialog */}
+      <ArchiveConfirmationDialog
+        open={openArchiveDialog}
+        onOpenChange={setOpenArchiveDialog}
+        isLoading={isArchiving}
+        onConfirm={isArchivingMode ? handleArchiveConfirm : handleUnarchiveConfirm}
+        archiveType="admin"
+        isArchiving={isArchivingMode}
+        itemDetails={{
+          itemId: adminToArchive?._id,
+          itemName: adminToArchive?.userName,
+        }}
+      />
     </div>
   );
 }

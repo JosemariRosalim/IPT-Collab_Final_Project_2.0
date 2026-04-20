@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import { formatCurrency } from "@/lib/utils";
 import UserCartItemsContent from "./cart-items-content";
 
 function UserCartWrapper({ cartItems, setOpenCartSheet }) {
@@ -28,7 +29,7 @@ function UserCartWrapper({ cartItems, setOpenCartSheet }) {
       <div className="mt-8 space-y-4">
         <div className="flex justify-between">
           <span className="font-bold">Total</span>
-          <span className="font-bold">₱{totalCartAmount.toFixed(2)}</span>
+          <span className="font-bold">₱{formatCurrency(totalCartAmount)}</span>
         </div>
       </div>
       <Button

@@ -51,16 +51,25 @@ function CommonForm({
               id={getControlItem.name}
               type={isPasswordField && isPasswordVisible ? "text" : getControlItem.type}
               value={value}
-              onChange={(event) =>
+              onChange={(event) => {
+                let inputValue = event.target.value;
+                
+                // For phone fields, only allow numbers
+                if (getControlItem.name === "phone" || getControlItem.type === "tel") {
+                  inputValue = inputValue.replace(/[^0-9]/g, "");
+                }
+                
                 setFormData({
                   ...formData,
-                  [getControlItem.name]: event.target.value,
+                  [getControlItem.name]: inputValue,
                 })
-              }
+              }}
               className={isPasswordField ? "pr-10" : ""}
               required={getControlItem.required}
               disabled={isFieldDisabled}
               readOnly={isFieldReadOnly}
+              pattern={getControlItem.pattern || ""}
+              inputMode={getControlItem.type === "tel" ? "numeric" : ""}
             />
             {isPasswordField && (
               <button
@@ -172,7 +181,7 @@ function CommonForm({
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate>
       <div className="flex flex-col gap-3">
         {formControls.map((controlItem) => (
           <div className="grid w-full gap-1.5" key={controlItem.name}>

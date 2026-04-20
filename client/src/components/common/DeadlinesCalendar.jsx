@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { io } from "socket.io-client";
+import { formatCurrency } from "@/lib/utils";
 
 function timeUntil(dateStr) {
   if (!dateStr) return "";
@@ -552,7 +553,7 @@ export default function DeadlinesCalendar() {
                                   Order ID: {d.orderId.substring(0, 8)}
                                 </p>
                                 <p className="text-[10px] lg:text-xs text-muted-foreground mb-1">
-                                  Amount: ₱{d.totalAmount?.toFixed(2)}
+                                  Amount: ₱{formatCurrency(d.totalAmount)}
                                 </p>
                                 {cartItems.length > 0 && (
                                   <div className="mt-1.5 space-y-0.5">
@@ -612,7 +613,7 @@ export default function DeadlinesCalendar() {
                                       Order ID: {d.orderId.substring(0, 8)}
                                     </p>
                                     <p className="text-xs text-muted-foreground mb-1">
-                                      ₱{d.totalAmount?.toFixed(2)} • {new Date(d.deadline).toLocaleTimeString('en-US', {
+                                      ₱{formatCurrency(d.totalAmount)} • {new Date(d.deadline).toLocaleTimeString('en-US', {
                                         hour: '2-digit',
                                         minute: '2-digit'
                                       })}

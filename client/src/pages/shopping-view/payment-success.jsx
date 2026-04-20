@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getOrderDetails, submitPaymentProof, archiveOrder, unarchiveOrder, getAllOrdersByUserId, resetOrderDetails } from "@/store/shop/order-slice";
 import { generateReceiptPDF } from "@/utils/generateReceipt";
+import { formatCurrency, formatOrderId } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Download, Upload, CheckCircle2, FileImage, Archive, ArchiveRestore, Clock } from "lucide-react";
 import BackButton from "@/components/common/back-button";
@@ -500,11 +501,11 @@ function PaymentSuccessPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Order ID:</span>
-                <span className="font-mono text-xs">{orderDetails._id}</span>
+                <span className="font-mono text-xs">{formatOrderId(orderDetails._id, orderDetails?.sequentialOrderNumber)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Amount:</span>
-                <span className="font-bold">₱{orderDetails.totalAmount?.toFixed(2) || "0.00"}</span>
+                <span className="font-bold">₱{formatCurrency(orderDetails.totalAmount)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Status:</span>
@@ -588,10 +589,10 @@ function PaymentSuccessPage() {
                       <h4 className="font-semibold text-foreground truncate">{item.title}</h4>
                       <div className="flex items-center gap-4 mt-2 text-sm">
                         <span className="text-muted-foreground">Qty: <span className="font-medium text-foreground">{item.quantity}</span></span>
-                        <span className="text-muted-foreground">Price: <span className="font-semibold text-primary">₱{item.price}</span></span>
+                        <span className="text-muted-foreground">Price: <span className="font-semibold text-primary">₱{formatCurrency(item.price)}</span></span>
                       </div>
                       <div className="mt-1 text-sm font-semibold text-foreground">
-                        Subtotal: <span className="text-primary">₱{(item.price * item.quantity).toFixed(2)}</span>
+                        Subtotal: <span className="text-primary">₱{formatCurrency(item.price * item.quantity)}</span>
                       </div>
                     </div>
                   </div>

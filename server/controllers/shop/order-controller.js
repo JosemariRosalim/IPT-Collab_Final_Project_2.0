@@ -3,6 +3,7 @@ const Cart = require("../../models/Cart");
 const Product = require("../../models/Product");
 const mongoose = require("mongoose");
 const { imageUploadUtil } = require("../../helpers/cloudinary");
+const { getNextSequentialOrderNumber } = require("../../helpers/counter");
 
 const createOrder = async (req, res) => {
   try {
@@ -84,8 +85,12 @@ const createOrder = async (req, res) => {
 
     // Create order (stock will be reduced when admin confirms the order)
     try {
+      // Get next sequential order number
+      const sequentialOrderNumber = await getNextSequentialOrderNumber();
+
       // Create order
       const newlyCreatedOrder = new Order({
+        sequentialOrderNumber,
         userId,
         cartId,
         cartItems,

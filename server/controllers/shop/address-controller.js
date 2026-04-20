@@ -11,6 +11,22 @@ const addAddress = async (req, res) => {
       });
     }
 
+    // Validate phone number - only numbers allowed
+    if (!/^\d+$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must contain only digits!",
+      });
+    }
+
+    // Validate phone number length (typically 10-15 digits)
+    if (phone.length < 10 || phone.length > 15) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be between 10 and 15 digits!",
+      });
+    }
+
     const newlyCreatedAddress = new Address({
       userId,
       address,
@@ -70,6 +86,24 @@ const editAddress = async (req, res) => {
         success: false,
         message: "User and address id is required!",
       });
+    }
+
+    // Validate phone number if provided
+    if (formData.phone) {
+      if (!/^\d+$/.test(formData.phone)) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number must contain only digits!",
+        });
+      }
+
+      // Validate phone number length (typically 10-15 digits)
+      if (formData.phone.length < 10 || formData.phone.length > 15) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number must be between 10 and 15 digits!",
+        });
+      }
     }
 
     const address = await Address.findOneAndUpdate(

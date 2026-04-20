@@ -7,6 +7,7 @@ import { getAdminProfile } from "@/store/admin/profile-slice";
 import { io } from "socket.io-client";
 import { addNotification, setConnectionStatus } from "@/store/notifications/notification-slice";
 import { useToast } from "@/components/ui/use-toast";
+import { formatCurrency } from "@/lib/utils";
 
 function AdminLayout() {
   const [openSidebar, setOpenSidebar] = useState(false);
@@ -77,7 +78,7 @@ function AdminLayout() {
         target: "admin",
         type: "new-order",
         title: "New Order Received",
-        message: `Order from ${orderData.userName || "Unknown User"} - ₱${orderData.totalAmount?.toFixed(2) || "0.00"}`,
+        message: `Order from ${orderData.userName || "Unknown User"} - ₱${formatCurrency(orderData.totalAmount) || "0.00"}`,
         orderId: orderData.orderId,
         orderData: orderData,
       }));
@@ -85,7 +86,7 @@ function AdminLayout() {
       // Show toast notification
       toast({
         title: "New Order Received!",
-        description: `Order from ${orderData.userName || "Unknown User"} - ₱${orderData.totalAmount?.toFixed(2) || "0.00"}`,
+        description: `Order from ${orderData.userName || "Unknown User"} - ₱${formatCurrency(orderData.totalAmount) || "0.00"}`,
         duration: 5000,
         variant: "success",
       });

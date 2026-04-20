@@ -19,6 +19,7 @@ import {
   cancelOrder,
 } from "@/store/shop/order-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
+import { formatCurrency, formatOrderId } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { useNavigate } from "react-router-dom";
 import {
@@ -260,7 +261,7 @@ function ShoppingOrders() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span className="font-medium">Order ID:</span>
-                          <span className="font-semibold break-all">{order._id}</span>
+                          <span className="font-semibold break-all">{formatOrderId(order._id, order.sequentialOrderNumber)}</span>
                         </div>
                         <p className="text-sm font-semibold text-foreground">
                           {getPrimaryItem(order).title}
@@ -277,7 +278,7 @@ function ShoppingOrders() {
                         Qty: {getTotalQuantity(order)}
                       </Badge>
                       <span className="text-lg font-bold text-primary">
-                        ₱{order.totalAmount?.toFixed(2)}
+                        ₱{formatCurrency(order.totalAmount)}
                       </span>
                     </div>
                   </div>
@@ -297,9 +298,9 @@ function ShoppingOrders() {
                           <h3 className="font-semibold">{item.title}</h3>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Quantity: {item.quantity}</span>
-                            <span>Price: ₱{item.price?.toFixed(2)}</span>
+                            <span>Price: ₱{formatCurrency(item.price)}</span>
                             <span className="font-semibold text-foreground">
-                              Total: ₱{(item.price * item.quantity).toFixed(2)}
+                              Total: ₱{formatCurrency(item.price * item.quantity)}
                             </span>
                           </div>
                         </div>
@@ -357,7 +358,7 @@ function ShoppingOrders() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm">
                         <span className="font-medium text-muted-foreground">Order ID:</span>
-                        <span className="font-semibold">{orderItem?._id?.slice(-8)?.toUpperCase()}</span>
+                        <span className="font-semibold">{formatOrderId(orderItem?._id, orderItem?.sequentialOrderNumber)}</span>
                       </div>
                       {pickedUpDate ? (
                         <div className="flex items-center gap-2 text-sm">
@@ -406,7 +407,7 @@ function ShoppingOrders() {
                         </Badge>
                       )}
                       <span className="text-lg font-bold text-primary ml-auto">
-                        ₱{orderItem?.totalAmount?.toFixed(2)}
+                        ₱{formatCurrency(orderItem?.totalAmount)}
                       </span>
                     </div>
                   </div>
@@ -454,9 +455,9 @@ function ShoppingOrders() {
                           <h3 className="font-semibold text-sm sm:text-base mb-2">{item.title}</h3>
                           <div className="flex flex-wrap items-center gap-4 text-sm">
                             <span className="text-muted-foreground"><span className="font-medium">Quantity:</span> {item.quantity}</span>
-                            <span className="text-muted-foreground"><span className="font-medium">Price:</span> ₱{item.price?.toFixed(2)}</span>
+                            <span className="text-muted-foreground"><span className="font-medium">Price:</span> ₱{formatCurrency(item.price)}</span>
                             <span className="font-semibold text-foreground">
-                              <span className="font-medium">Total:</span> ₱{(item.price * item.quantity).toFixed(2)}
+                              <span className="font-medium">Total:</span> ₱{formatCurrency(item.price * item.quantity)}
                             </span>
                           </div>
                         </div>

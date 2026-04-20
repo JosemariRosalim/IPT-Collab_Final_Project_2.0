@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, RefreshCw, ListOrdered, Calendar, Package } from "lucide-react";
+import { Loader2, RefreshCw, ListOrdered, Calendar, Package, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +43,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { generateMonthlyReportPDF } from "@/utils/generateMonthlyReportPDF";
+import { generateYearlyReportPDF } from "@/utils/generateYearlyReportPDF";
+import { generateInventoryReportPDF } from "@/utils/generateInventoryReportPDF";
 
 const rangeOptions = [
   { id: "daily", label: "Daily (last 7 days)" },
@@ -578,7 +581,17 @@ function SuperAdminReports() {
           {monthlySalesReport.data && (
             <Card>
               <CardHeader>
-                <CardTitle>{monthlySalesReport.data.period}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{monthlySalesReport.data.period}</CardTitle>
+                  <Button
+                    onClick={() => generateMonthlyReportPDF(monthlySalesReport.data)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
                 <CardDescription>
                   Total Sales: {formatNumber(currencyFormatter, monthlySalesReport.data.summary.totalSales)} • 
                   Orders: {formatNumber(numberFormatter, monthlySalesReport.data.summary.orderCount)} • 
@@ -659,7 +672,17 @@ function SuperAdminReports() {
           {yearlySalesReport.data && (
             <Card>
               <CardHeader>
-                <CardTitle>{yearlySalesReport.data.period}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{yearlySalesReport.data.period}</CardTitle>
+                  <Button
+                    onClick={() => generateYearlyReportPDF(yearlySalesReport.data)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
                 <CardDescription>
                   Total Sales: {formatNumber(currencyFormatter, yearlySalesReport.data.summary.totalSales)} • 
                   Orders: {formatNumber(numberFormatter, yearlySalesReport.data.summary.orderCount)} • 
@@ -727,11 +750,11 @@ function SuperAdminReports() {
                 <div className="space-y-2">
                   <Label htmlFor="inventory-month">Month (Optional)</Label>
                   <Select
-                    value={inventoryParams.month}
+                    value={inventoryParams.month || "0"}
                     onValueChange={(value) =>
                       setInventoryParams((prev) => ({
                         ...prev,
-                        month: value,
+                        month: value === "0" ? "" : value,
                       }))
                     }
                   >
@@ -739,7 +762,7 @@ function SuperAdminReports() {
                       <SelectValue placeholder="Leave empty for yearly/current" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="0">None</SelectItem>
                       {Array.from({ length: 12 }, (_, i) => (
                         <SelectItem key={i + 1} value={(i + 1).toString()}>
                           {new Date(0, i).toLocaleDateString("en-US", {
@@ -769,7 +792,17 @@ function SuperAdminReports() {
           {inventoryReport.data && (
             <Card>
               <CardHeader>
-                <CardTitle>Inventory Report - {inventoryReport.data.period}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Inventory Report - {inventoryReport.data.period}</CardTitle>
+                  <Button
+                    onClick={() => generateInventoryReportPDF(inventoryReport.data)}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
                 <CardDescription>
                   Total Products: {formatNumber(numberFormatter, inventoryReport.data.summary.totalProducts)} • 
                   Total Stock Value: {formatNumber(currencyFormatter, inventoryReport.data.summary.totalStockValue)} • 

@@ -351,7 +351,7 @@ function ShoppingOrders() {
               return (
                 <div
                   key={orderItem?._id}
-                  className="border rounded-lg p-4 space-y-4 hover:shadow-md transition-shadow bg-white"
+                  className="border rounded-lg p-4 space-y-4 hover:shadow-md transition-shadow bg-muted/30"
                 >
                   {/* Header Section */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b">
